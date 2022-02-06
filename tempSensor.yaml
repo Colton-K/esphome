@@ -1,0 +1,37 @@
+esphome:
+  name: tempSensor
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: "thinkAP"
+  password: "penguinPinapplePizza"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Rgbstrip Fallback Hotspot"
+    password: "YG8PREtvT3Do"
+
+captive_portal:
+
+
+# Example configuration entry
+sensor:
+  - platform: dht
+    pin: D2
+    temperature:
+      name: "208 Temperature"
+    humidity:
+      name: "208 Room Humidity"
+    update_interval: 60s
