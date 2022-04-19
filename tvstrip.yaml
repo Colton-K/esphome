@@ -1,0 +1,222 @@
+esphome:
+  name: tvstrip
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: "thinkAP"
+  password: "penguinPinapplePizza"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Rgbstrip Fallback Hotspot"
+    password: "YG8PREtvT3Do"
+
+captive_portal:
+
+light:
+  - platform: neopixelbus
+    variant: WS2812X
+    method: ESP8266_DMA
+    pin: GPIO3
+    num_leds: 300
+    name: "Neopixel Light"
+    gamma_correct: 2 # default = 2.8
+
+    effects:
+      # - random:
+      # - strobe:
+      # - flicker:
+      # - addressable_rainbow:
+      # - addressable_color_wipe:
+      # - addressable_scan:
+      # - addressable_twinkle:
+      # - addressable_random_twinkle:
+      # - addressable_fireworks:
+      # - addressable_flicker:
+
+      - addressable_lambda:
+            name: "Christmas RedGreen (Static)"
+            lambda: |-
+      
+              for (int i = 1; i <  it.size(); i+=2) {
+              it[i] = light::ESPColor(255, 0, 18);
+              }
+              for (int i = 0; i <  it.size(); i+=2) {
+              it[i] = light::ESPColor(0, 179, 44);
+              }
+            # from reddit user thedoctor___
+            # https://www.reddit.com/r/homeassistant/comments/bua3u8/esphome_what_custom_addressable_lambda_effects/
+  
+  
+      - addressable_lambda:
+            name: "Bluez"
+            lambda: |-
+      
+              for (int i = 0; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(255, 255, 255);
+              }
+      
+              for (int i = 1; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(255, 255, 255);
+              }
+      
+              for (int i = 2; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(238, 0, 255);
+              }
+      
+              for (int i = 3; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(238, 0, 255);
+              }
+      
+              for (int i = 4; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(255, 157, 0);
+              }
+      
+              for (int i = 5; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(255, 157, 0);
+              }
+      
+              for (int i = 6; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(0, 28, 209);
+              }
+      
+              for (int i = 7; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(0, 28, 209);
+              }
+      
+              for (int i = 8; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(183, 255, 0);
+              }
+      
+              for (int i = 9; i <  it.size(); i+=10) {
+              it[i] = light::ESPColor(183, 255, 0);
+              }
+            # from reddit user thedoctor___
+            # https://www.reddit.com/r/homeassistant/comments/bua3u8/esphome_what_custom_addressable_lambda_effects/
+  
+      - addressable_lambda:
+            name: "Fire"
+            update_interval: 15ms
+            lambda: |-
+              int Cooling = 55;
+              int Sparking = 110;
+              static byte heat[188];
+              int cooldown;
+      
+              // Step 1.  Cool down every cell a little
+              for( int i = 0; i < it.size(); i++) {
+                cooldown = random(0, ((Cooling * 10) / it.size()) + 2);
+      
+                if(cooldown>heat[i]) {
+                  heat[i]=0;
+                } else {
+                  heat[i]=heat[i]-cooldown;
+                }
+              }
+      
+              // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+              for( int k= it.size() - 1; k >= 2; k--) {
+                heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+              }
+      
+              // Step 3.  Randomly ignite new 'sparks' near the bottom
+              if( random(255) < Sparking ) {
+                int y = random(7);
+                heat[y] = heat[y] + random(160,255);
+              }
+      
+              // Step 4.  Convert heat to LED colors
+              for( int Pixel = 0; Pixel < it.size(); Pixel++) {
+                // Scale 'heat' down from 0-255 to 0-191
+                byte t192 = round((heat[Pixel]/255.0)*191);
+      
+                // calculate ramp up from
+                byte heatramp = t192 & 0x3F; // 0..63
+                heatramp <<= 2; // scale up to 0..252
+      
+                // figure out which third of the spectrum we're in:
+                //this is where you can reverse the effect by switching the commented out lines in all 3 places.
+                if( t192 > 0x80) {                     // hottest
+                  //it[it.size() - Pixel - 1] = ESPColor(255, 255, heatramp);
+                  it[Pixel] = ESPColor(255, 255, heatramp);
+                } else if( t192 > 0x40 ) {             // middle
+                  //it[it.size() - Pixel - 1] = ESPColor(255, heatramp, 0);
+                  it[Pixel] = ESPColor(255, heatramp, 0);
+                } else {                               // coolest
+                  //it[it.size() - Pixel - 1] = ESPColor(heatramp, 0, 0);
+                  it[Pixel] = ESPColor(heatramp, 0, 0);
+                }
+              }
+
+      - addressable_lambda:
+          name: Wheel of Color
+          update_interval: 100ms
+          lambda:
+          
+            ESPColor colors[] = { ESPColor(255,0,0), 
+                                  ESPColor(0,255,0), 
+                                  ESPColor(255,255,0),  
+                                  ESPColor(0,0,255),  
+                                  ESPColor(255,82,0),  
+                                  ESPColor(163,0,255),  
+                                  };
+                                  
+            static int state = 0;
+            static int step = 0;
+            const int color_size = 6;
+            static int width = it.size();
+  
+            for (int i = it.size() - 1; i > 0; i--) {
+              it[i] = it[i - 1].get();
+            }
+
+            it[0] = colors[state];
+
+            step += 1;
+            if (step >= width){
+              step = 0;
+              state += 1;
+              if (state >= color_size) 
+                  state = 0;
+            }
+      - addressable_lambda:
+          name: Vesuvius
+          update_interval: 50ms
+          lambda:
+          
+            ESPColor colors[] = { ESPColor(255,0,0), 
+                                  ESPColor(0,255,0), 
+                                  ESPColor(255,255,0),  
+                                  ESPColor(0,0,255),  
+                                  ESPColor(255,0,255),  
+                                  ESPColor(0,255,255),  
+                                  ESPColor(255,255,255),  
+                                  ESPColor(0,0,0),  
+                                  };
+                                  
+            static int color = 0;
+                static int step = 0;
+                const int color_size = 8;
+
+                it[it.size()/2 - step] = colors[color];
+                it[it.size()/2 + step] = colors[color];
+
+                step += 1;
+                if (step >= it.size()/2){
+                  step = 0;
+                  color += 1;
+                  if (color >= color_size) 
+                      color = 0;
+                }
